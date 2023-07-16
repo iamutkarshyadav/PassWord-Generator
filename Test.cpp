@@ -46,19 +46,19 @@ private:
     double reusedScore;
     double patternScore;
 
-    unordered_set<string> personalInfo = {
+    const string commonSubstitutions[5][2] = {
+        {"a", "@"},
+        {"e", "3"},
+        {"i", "1"},
+        {"o", "0"},
+        {"s", "$"}};
+
+    const string personalInfo[9] = {
         "password", "123456", "qwerty", "abc123", "letmein",
         "monkey", "football", "iloveyou", "admin"};
 
-    unordered_set<string> reusedPasswords = {
+    const string reusedPasswords[5] = {
         "password1", "password2", "password3", "password4", "password5"};
-
-    unordered_map<char, string> commonSubstitutions = {
-        {'a', "@"},
-        {'e', "3"},
-        {'i', "1"},
-        {'o', "0"},
-        {'s', "$"}};
 
 public:
     PasswordStrengthChecker(string password) : password(password)
@@ -111,8 +111,15 @@ public:
         double entropy = 0;
         if (length > 0)
         {
-            unordered_set<char> characterSet(password.begin(), password.end());
-            double characterSetSize = characterSet.size();
+            string uniqueChars;
+            for (char c : password)
+            {
+                if (uniqueChars.find(c) == string::npos)
+                {
+                    uniqueChars += c;
+                }
+            }
+            double characterSetSize = uniqueChars.length();
             entropy = length * log2(characterSetSize);
         }
         randomnessScore = (entropy / 128) * 100;
@@ -133,9 +140,9 @@ public:
         substitutionScore = 0;
         for (const auto &entry : commonSubstitutions)
         {
-            if (password.find(entry.first) != string::npos ||
-                password.find(entry.second) != string::npos ||
-                password.find(toupper(entry.second[0])) != string::npos)
+            if (password.find(entry[0]) != string::npos ||
+                password.find(entry[1]) != string::npos ||
+                password.find(toupper(entry[1][0])) != string::npos)
             {
                 substitutionScore -= 10;
                 break;
@@ -144,8 +151,25 @@ public:
 
         string lowercasePassword = password;
         transform(lowercasePassword.begin(), lowercasePassword.end(), lowercasePassword.begin(), ::tolower);
-        personalScore = personalInfo.count(lowercasePassword) > 0 ? -20 : 0;
-        reusedScore = reusedPasswords.count(lowercasePassword) > 0 ? -10 : 0;
+        personalScore = 0;
+        for (const string &info : personalInfo)
+        {
+            if (lowercasePassword == info)
+            {
+                personalScore -= 20;
+                break;
+            }
+        }
+
+        reusedScore = 0;
+        for (const string &reused : reusedPasswords)
+        {
+            if (lowercasePassword == reused)
+            {
+                reusedScore -= 10;
+                break;
+            }
+        }
 
         patternScore = password.find_first_of("0123456789") == string::npos ||
                                password.find_first_of("abcdefghijklmnopqrstuvwxyz") == string::npos ||
