@@ -25,7 +25,6 @@ string generate_password(int length)
 
 double password_strength(string password)
 {
-
     double length = password.length();
     double length_score = 10 * (1 - exp(-length / 10));
 
@@ -154,7 +153,30 @@ double password_strength(string password)
                    dictionary_score + substitution_score + personal_score +
                    reused_score + pattern_score;
 
-    return round(max(score, 0.0));
+    // Cap the score at 100 if it exceeds that value
+    return min(round(score), 100.0);
+}
+void display_strength_bar(double strength)
+{
+    const int total_width = 50; // Total width of the strength bar
+
+    // Calculate the number of filled characters in the bar based on the strength score
+    int filled_chars = static_cast<int>(strength * (total_width / 100.0));
+
+    // Create the bar with filled and unfilled characters
+    string strength_bar = "[";
+    for (int i = 0; i < filled_chars; ++i)
+    {
+        strength_bar += "=";
+    }
+    for (int i = filled_chars; i < total_width; ++i)
+    {
+        strength_bar += " ";
+    }
+    strength_bar += "]";
+
+    // Display the strength bar
+    cout << strength_bar << " " << strength << "%\n";
 }
 
 int main()
@@ -181,7 +203,8 @@ int main()
     else
     {
         double strength = password_strength(password);
-        cout << "Password strength: " << strength << endl;
+        cout << "Password strength: ";
+        display_strength_bar(strength);
     }
 
     return 0;
